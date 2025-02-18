@@ -65,8 +65,8 @@ autoinstall:
           apt-get install -f -y
 
           # Instalar o AnyDesk
-          wget -c https://download.anydesk.com/linux/anydesk_6.1.1-1_amd64.deb -O AnyDesk.deb
-          dpkg -i AnyDesk.deb
+          wget -c https://download.anydesk.com/linux/anydesk_6.1.1-1_amd64.deb -O
+          dpkg -i /anydesk_6.1.1-1_amd64.deb
           apt-get install -f -y
 
           # Instalar o Docker Compose
@@ -81,6 +81,9 @@ autoinstall:
           wget https://archive.apache.org/dist/netbeans/netbeans/12.5/Apache-NetBeans-12.5-bin-linux-x64.sh
           chmod +x Apache-NetBeans-12.5-bin-linux-x64.sh
           ./Apache-NetBeans-12.5-bin-linux-x64.sh --silent
+
+          # Instalar o FreeIPA Client
+          apt install freeipa-client -y
 
           # Configurar o FreeIPA Client
           ipa-client-install --mkhomedir
