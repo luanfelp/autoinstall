@@ -1,95 +1,66 @@
 #cloud-config
-autoinstall:
-    version: 1
-    identity:
-        realname: 'operador'
-        hostname: ubuntu-desktop
-        username: operador
-        password: '$6$rounds=4096$Ib8YPS3Q1KSXgePG$gZmGTgTFih7G.9MHHPx7/yVFdI.t34hlMvOpysHlHc2XNdLean.X0qZEIqANY.KpF0en27mcW/LsMam39QhhW1'  # Senha criptografada
-    locale: pt_BR.utf8
-    keyboard:
-        layout: br
-    timezone: "America/Sao_Paulo"
-    packages:
-        - libreoffice
-        - gimp
-        - git
-        - wget
-        - anydesk
-        - ocsinventory-agent
-        - binutils
-        - openjdk-11-jdk
-        - openjdk-8-jdk
-        - unzip
-        - ttf-mscorefonts-installer
-        - curl
-        - python3-pycurl
-        - docker.io
-        - freeipa-client
-    snaps:
-        - name: spotify
-          channel: stable
-          classic: false
-    codecs:
-        install: true
-    drivers:
-        install: true
-    updates: all
-    shutdown: reboot
-    late-commands:
-        - |
-          cat > /target/root/install-extra.sh << 'EOF'
-          #!/bin/bash
+users:
+  - default
+  - name: operador
+    password: $6$hRJb7e8G4BWzN0dM$k2/T/qPgYU/Ae1KD3sZO.cLQyu9Xb.p5Cw17JfAHq6gB0F7bvhTvgFx5BHVaGV7/WrT38fM6d4WzR/
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/bash
+    groups: [wheel, audio, video]
+    lock_passwd: false
+  - name: ubuntu
+    password: $6$hRJb7e8G4BWzN0dM$k2/T/qPgYU/Ae1KD3sZO.cLQyu9Xb.p5Cw17JfAHq6gB0F7bvhTvgFx5BHVaGV7/WrT38fM6d4WzR/
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/bash
+    groups: [wheel, audio, video]
+    lock_passwd: false
+  - name: ubuntu-cloudguest
+    password: $6$hRJb7e8G4BWzN0dM$k2/T/qPgYU/Ae1KD3sZO.cLQyu9Xb.p5Cw17JfAHq6gB0F7bvhTvgFx5BHVaGV7/WrT38fM6d4WzR/
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/bash
+    groups: [wheel, audio, video]
+    lock_passwd: false
 
-          # Atualizar a lista de pacotes
-          apt-get update
+package_update: true
+package_upgrade: true
+packages:
+  - flatpak
+  - discord
+  - anydesk
+  - google-chrome-stable
+  - spotify
+  - network-manager-openvpn-gnome
+  - openvpn
+  - network-manager-openconnect-gnome
+  - openconnect
+  - openresolv-conf
+  - xorg
 
-          # Instalar o Google Chrome
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          dpkg -i google-chrome-stable_current_amd64.deb
-          apt-get install -f -y
-
-          # Instalar o DBeaver
-          wget https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb
-          dpkg -i dbeaver-ce_latest_amd64.deb
-          apt-get install -f -y
-
-          # Instalar o Discord
-          wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
-          dpkg -i discord.deb
-          apt-get install -f -y
-
-          # Instalar o Master PDF Editor
-          wget -c https://code-industry.net/public/master-pdf-editor-5.8.70-qt5.x86_64.deb
-          dpkg -i master-pdf-editor-5.8.70-qt5.x86_64.deb
-          apt-get install -f -y
-
-          # Instalar o AnyDesk
-          wget -c https://download.anydesk.com/linux/anydesk_6.1.1-1_amd64.deb -O AnyDesk.deb
-          dpkg -i AnyDesk.deb
-          apt-get install -f -y
-
-          # Instalar o Docker Compose
-          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          groupadd docker
-          usermod -aG docker $USER
-
-          # Instalar o NetBeans 12
-          mkdir -p /home/$USER/Netbeans_Instalador
-          cd /home/$USER/Netbeans_Instalador
-          wget https://archive.apache.org/dist/netbeans/netbeans/12.5/Apache-NetBeans-12.5-bin-linux-x64.sh
-          chmod +x Apache-NetBeans-12.5-bin-linux-x64.sh
-          ./Apache-NetBeans-12.5-bin-linux-x64.sh --silent
-
-          # Configurar o FreeIPA Client
-          ipa-client-install --mkhomedir
-
-          # Mudar a senha do root
-          echo "root:1nfr4@2023" | chpasswd
-
-          # Finalizar
-          echo "Instalação concluída!"
-          EOF
-        - chmod +x /target/root/install-extra.sh
-        - chroot /target /root/install-extra.sh
+# Instalar Flatpak e adicionar o repositório Flathub
+write_files:
+  - path: /etc/apt/sources.list.d/flatpak.list
+    owner: root:root
+    content: |
+      deb https://flathub.org/repo/flathub.flatpakrepo stable main
+  - path: /etc/systemd/system/graphical.target.wants/display-manager.service
+    owner: root:root
+    content: |
+      [Unit]
+      Description=Display Manager
+      After=network.target
+      [Service]
+      ExecStart=/usr/bin/xdg-su -l -c '/etc/X11/Xsession /etc/X11/xinit/xinitrc'
+      [Install]
+      WantedBy=graphical.target
+# Configurar o adaptador de rede sem fio
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+  wifis:
+    wlo1:
+      optional: true
+      access-points:
+        SmartBR_Wifi:
+          password: "p1nc3l@sm4rtbr2021"
+      dhcp4: true
